@@ -1,8 +1,8 @@
 #setting groq up
 import os
-#GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-#print(GROQ_API_KEY)
-GROQ_API_KEY="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"
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+print(GROQ_API_KEY)
+
 
 #Convert img to base64
 import base64
