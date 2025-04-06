@@ -7,9 +7,12 @@ print(GROQ_API_KEY)
 #Convert img to base64
 import base64
 
-img_path="ringworm.jpeg"
-img_file=open(img_path,"rb")
-encoded_img=base64.b64encode(img_file.read()).decode("utf-8")
+#img_path="ringworm.jpeg"
+
+
+def encode_image(image_path):   
+    image_file=open(image_path, "rb")
+    return base64.b64encode(image_file.read()).decode('utf-8')
 
 #setup the llm
 
@@ -20,33 +23,33 @@ query="What is wrong with my skin"
 client = Groq(api_key=GROQ_API_KEY)
 
 # Define model and message
-model = "llama-3.2-90b-vision-preview"
-query = "What is wrong with my skin? Just give me your diagnosis"
 
-messages = [
-    {
-        "role": "user",
-        "content": [
-            {"type": "text", "text": query},
-            {
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{encoded_img}"
-                }
-            }
-        ]
-    }
-]
+from groq import Groq
 
-# Call API
-chat_completion = client.chat.completions.create(
-    model=model,
-    messages=messages,
-)
+query="Is there something wrong with my face?"
+model="llama-3.2-90b-vision-preview"
 
-# Print result
-print(chat_completion.choices[0].message.content)
+def analyze_image_with_query(query, model, encoded_image):
+    client=Groq()  
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text", 
+                    "text": query
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{encoded_image}",
+                    },
+                },
+            ],
+        }]
+    chat_completion=client.chat.completions.create(
+        messages=messages,
+        model=model
+    )
 
-
-
-
+    return chat_completion.choices[0].message.content

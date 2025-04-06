@@ -1,3 +1,7 @@
 groq
 pydub
-speech_recognition
+SpeechRecognition
+dotenv
+gtts
+elevenlabs
+gradio
