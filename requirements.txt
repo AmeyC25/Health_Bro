@@ -3,5 +3,6 @@ pydub
 SpeechRecognition
 dotenv
 gtts
-elevenlabs
 gradio
+faster-whisper
+pyaudio
