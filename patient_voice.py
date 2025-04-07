@@ -40,13 +40,21 @@ def record_audio(file_path, timeout=20, phrase_time_limit=None):
         logging.error(f"An error occurred while recording: {e}")
         return False
 
-def transcribe_with_faster_whisper(audio_filepath):
+def transcribe_with_faster_whisper(audio_filepath, GROQ_API_KEY=None, stt_model=None):
     """
     Transcribes the audio file using the faster-whisper model.
+    
+    Parameters:
+    - audio_filepath: Path to the audio file
+    - GROQ_API_KEY: Optional API key (not used by faster-whisper but needed for interface compatibility)
+    - stt_model: Optional model name (defaults to "base" if not specified)
     """
     try:
+        # Use specified model or default to "base"
+        model_name = "base" if stt_model is None else "base"
+        
         # Load model (downloaded the first time)
-        model = WhisperModel("base", device="cpu", compute_type="float32")  # Specify device explicitly
+        model = WhisperModel(model_name, device="cpu", compute_type="float32")
         
         # Transcribe audio
         segments, info = model.transcribe(audio_filepath, beam_size=5)
@@ -61,7 +69,7 @@ def transcribe_with_faster_whisper(audio_filepath):
     
     except Exception as e:
         logging.error(f"An error occurred during transcription: {e}")
-        return None
+        return "I couldn't understand what you said. Please try again."
 
 # Main flow
 if __name__ == "__main__":
