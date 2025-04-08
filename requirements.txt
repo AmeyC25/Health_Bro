@@ -6,3 +6,8 @@ gtts
 gradio
 faster-whisper
 pyaudio
+langchain 
+langchain_community 
+langchain_huggingface 
+sentence-transformers 
+faiss-cpu
