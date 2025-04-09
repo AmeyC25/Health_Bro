@@ -89,31 +89,17 @@ def set_custom_prompt(custom_prompt_template):
     prompt = PromptTemplate(template=custom_prompt_template, input_variables=["context", "question"])
     return prompt
 
-from langchain_huggingface import HuggingFaceEndpoint
-
 def load_llm(huggingface_repo_id, HF_TOKEN):
     llm = HuggingFaceEndpoint(
         repo_id=huggingface_repo_id,
-        task="text-generation",                # Specify the task
-        temperature=0.5,                       # Optional but useful
-        max_new_tokens=512,                    # Now passed explicitly
-        huggingfacehub_api_token=HF_TOKEN      # Auth token here
+        task="text-generation",
+        temperature=0.5,
+        max_new_tokens=512,
+        huggingfacehub_api_token=HF_TOKEN
     )
     return llm
 
-
-def format_source_documents(source_documents):
-    formatted_sources = []
-    for i, doc in enumerate(source_documents, 1):
-        source_info = {
-            'content': doc.page_content,
-            'metadata': doc.metadata,
-            'source_number': i
-        }
-        formatted_sources.append(source_info)
-    return formatted_sources
-
-# Voice+Image Processing Function
+# Voice + Image Processing
 def process_inputs(audio_input, image_input):
     try:
         if not audio_input:
@@ -158,14 +144,14 @@ def process_inputs(audio_input, image_input):
         logging.error(f"Error in process_inputs: {e}")
         return "Error processing inputs", f"An error occurred: {str(e)}", None
 
-# RAG Chat Function
-def process_neuro_query(message, history):
+# RAG Chat + Source Display
+def process_neuro_query(message):
     try:
         HUGGINGFACE_REPO_ID = "mistralai/Mistral-7B-Instruct-v0.3"
         HF_TOKEN = "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"
 
         if not message:
-            return [{"role": "assistant", "content": "Please provide a query about neurosurgery."}]
+            return "Please provide a query about neurosurgery.", ""
 
         CUSTOM_PROMPT_TEMPLATE = """
         You are NeuroMate, an AI neurosurgical assistant. Use the provided context and your knowledge to answer the question.
@@ -178,7 +164,7 @@ def process_neuro_query(message, history):
 
         vectorstore = get_vectorstore()
         if vectorstore is None:
-            return [{"role": "assistant", "content": "Failed to load the neurosurgical knowledge base. Please check your vector store configuration."}]
+            return "Vector store not found.", ""
 
         qa_chain = RetrievalQA.from_chain_type(
             llm=load_llm(huggingface_repo_id=HUGGINGFACE_REPO_ID, HF_TOKEN=HF_TOKEN),
@@ -190,25 +176,26 @@ def process_neuro_query(message, history):
 
         response = qa_chain.invoke({'query': message})
         result = response["result"]
+        sources = response.get("source_documents", [])
 
-        history.append({"role": "user", "content": message})
-        history.append({"role": "assistant", "content": result})
+        formatted_sources = "\n\n".join(
+            f"**Source {i+1}**:\n{doc.page_content}" for i, doc in enumerate(sources)
+        )
 
-        return history
+        return result, formatted_sources
 
     except Exception as e:
         logging.error(f"Error in neurosurgical query processing: {e}")
-        return [{"role": "assistant", "content": f"I encountered an error while processing your neurosurgical query: {str(e)}"}]
+        return f"I encountered an error: {str(e)}", ""
 
-# Gradio App Creation
+# Gradio UI
 def create_gradio_app():
     with gr.Blocks(css=custom_css) as app:
-        gr.Markdown("# AI Medical Assistant with Neurosurgical Knowledge")
+        gr.Markdown("# HYGO AI ")
 
         with gr.Tabs():
-            with gr.TabItem("Voice & Image Analysis"):
+            with gr.TabItem("AlloEasy"):
                 gr.Markdown("## AI Doctor with Vision and Voice")
-                gr.Markdown("Speak your medical question and upload an image for analysis.")
                 with gr.Row():
                     with gr.Column():
                         audio_input = gr.Audio(sources=["microphone"], type="filepath", label="Speak your question")
@@ -225,24 +212,26 @@ def create_gradio_app():
                     outputs=[speech_output, doctor_response, voice_output]
                 )
 
-            with gr.TabItem("Chat with Neurosurgical Textbook"):
+            with gr.TabItem("NeuroMate"):
                 gr.Markdown("## Chat with Neurosurgical Textbook")
-                gr.Markdown("Ask questions about neurosurgery and get answers from a specialized knowledge base.")
+                chatbot_output = gr.Textbox(label="AI Response", lines=4)
+                source_accordion = gr.Accordion(label="View Sources", open=False)
+                with source_accordion:
+                    source_display = gr.Markdown("")
 
-                chatbot = gr.Chatbot(height=500, type='messages')
-                msg = gr.Textbox(label="Your neurosurgical question", placeholder="Ask about neurosurgical procedures, conditions, or treatments...")
+                user_question = gr.Textbox(label="Your neurosurgical question", placeholder="Ask about neurosurgical procedures, conditions, or treatments...")
+
+                user_question.submit(
+                    fn=process_neuro_query,
+                    inputs=user_question,
+                    outputs=[chatbot_output, source_display]
+                )
 
                 gr.HTML("""
                 <div class='disclaimer'>
-                ⚠️ This AI assistant is for informational purposes only...
+                ⚠️ This AI assistant is for informational purposes only. Please consult a licensed physician for real medical advice.
                 </div>
                 """)
-
-                msg.submit(
-                    process_neuro_query,
-                    inputs=[msg, chatbot],
-                    outputs=chatbot
-                )
 
         gr.Markdown("---")
         gr.Markdown("© 2025 Medical AI Assistant | For educational purposes only")
@@ -253,7 +242,7 @@ def create_gradio_app():
 if __name__ == "__main__":
     try:
         app = create_gradio_app()
-        app.launch(debug=True,share=True)
+        app.launch(debug=True, share=True)
         logging.info("Gradio app launched successfully at http://127.0.0.1:7860")
     except Exception as e:
         logging.error(f"Failed to launch Gradio app: {e}")
