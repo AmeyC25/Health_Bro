@@ -26,7 +26,7 @@ def encode_image(image_path):
         logging.error(f"Error encoding image: {e}")
         return None
 
-def analyze_image_with_query(query, encoded_image, model="llama-3.2-90b-vision-preview"):
+def analyze_image_with_query(query, encoded_image, model="meta-llama/llama-4-scout-17b-16e-instruct"):
     """
     Analyzes an image with a query using the Groq API.
     

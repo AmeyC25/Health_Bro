@@ -123,7 +123,7 @@ def process_inputs(audio_input, image_input):
                     doctor_response = analyze_image_with_query(
                         query=full_query, 
                         encoded_image=encoded_image, 
-                        model="llama-3.2-11b-vision-preview"
+                        model="meta-llama/llama-4-scout-17b-16e-instruct"
                     )
                 else:
                     doctor_response = "I couldn't process the image you provided."
