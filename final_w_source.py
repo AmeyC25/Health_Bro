@@ -148,7 +148,7 @@ def process_inputs(audio_input, image_input):
 def process_neuro_query(message):
     try:
         HUGGINGFACE_REPO_ID = "mistralai/Mistral-7B-Instruct-v0.3"
-        HF_TOKEN = "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"
+        HF_TOKEN = "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"
 
         if not message:
             return "Please provide a query about neurosurgery.", ""
